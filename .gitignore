@@ -1,8 +1,25 @@
-﻿venv/
+﻿# Python
 __pycache__/
 *.py[cod]
-*.sqlite3
+*.egg-info/
+venv/
+.venv/
+
+# Django
 db.sqlite3
+*.log
+
+# Переменные окружения
+.env
+
+# Медиа
+media/
+static/
+
+# IDE
 .idea/
 .vscode/
+
+# OS
 .DS_Store
+Thumbs.db
