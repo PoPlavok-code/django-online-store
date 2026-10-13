@@ -1,34 +1,35 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная - Online Store</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">Online Store</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active" href="{% url 'home' %}">Главная</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'contacts' %}">Контакты</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "catalog/base.html" %}
 
-    <div class="container mt-5">
-        <div class="p-5 mb-4 bg-light rounded-3">
-            <div class="container-fluid py-5">
-                <h1 class="display-5 fw-bold">Добро пожаловать в наш магазин!</h1>
-                <p class="col-md-8 fs-4">Здесь вы найдете лучшие товары по отличным ценам. Каталог товаров скоро будет добавлен.</p>
-                <a href="{% url 'contacts' %}" class="btn btn-primary btn-lg">Связаться с нами</a>
-            </div>
+{% block title %}Главная - Online Store{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Добро пожаловать в наш магазин!</h1>
+            <p class="col-md-8 fs-4">Здесь вы найдете лучшие товары по отличным ценам.</p>
+            <a href="{% url 'contacts' %}" class="btn btn-primary btn-lg">Связаться с нами</a>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <h2 class="mb-4">Каталог товаров</h2>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+                    <p class="card-text"><strong>Цена: {{ product.price }} руб.</strong></p>
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="alert alert-info">Товары пока не добавлены.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

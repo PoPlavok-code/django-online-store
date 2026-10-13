@@ -1,12 +1,17 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from .models import Product
 
 
-def home_view(request):
-    """Контроллер для домашней страницы"""
-    return render(request, 'catalog/home.html')
+def home(request):
+    """Контроллер для домашней страницы со списком товаров"""
+    # Получаем все товары из базы данных
+    products = Product.objects.all()
+
+    # Передаём их в шаблон под именем 'products'
+    return render(request, 'catalog/home.html', {'products': products})
 
 
-def contacts_view(request):
+def contacts(request):
     """Контроллер для страницы контактов с обработкой формы"""
     success = False
 
@@ -26,3 +31,11 @@ def contacts_view(request):
         'success': success
     }
     return render(request, 'catalog/contacts.html', context)
+
+
+def product_detail(request, product_id):
+    """Контроллер для страницы с подробной информацией о товаре (Задание 1)"""
+    # get_object_or_404 ищет товар по id. Если не находит, автоматически показывает ошибку 404
+    product = get_object_or_404(Product, id=product_id)
+
+    return render(request, 'catalog/product_detail.html', {'product': product})
