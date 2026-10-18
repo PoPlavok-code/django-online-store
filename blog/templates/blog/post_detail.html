@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }}</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        img { max-width: 100%; height: auto; }
+        .btn { display: inline-block; padding: 8px 16px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>{{ post.title }}</h1>
+    {% if post.preview %}
+        <img src="{{ post.preview.url }}" alt="{{ post.title }}">
+    {% endif %}
+    <p><small>Просмотров: {{ post.views_count }} | {{ post.created_at|date:"d.m.Y H:i" }}</small></p>
+    <hr>
+    <p>{{ post.content|linebreaks }}</p>
+    <hr>
+    <a href="{% url 'blog:post_list' %}" class="btn">← К списку</a>
+    <a href="{% url 'blog:post_update' post.pk %}" class="btn">Редактировать</a>
+    <a href="{% url 'blog:post_delete' post.pk %}" class="btn" style="background: #dc3545;">Удалить</a>
+</body>
+</html>
