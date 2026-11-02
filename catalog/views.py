@@ -1,15 +1,17 @@
-from django.views.generic import ListView, DetailView, View
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.views.generic import ListView, DetailView, View, CreateView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 from .models import Product
+from .forms import ProductForm
 
 
-# ========== Задание 1: CBV вместо FBV ==========
+# ========== Существующие контроллеры ==========
 
 class HomeView(ListView):
     """Контроллер для домашней страницы со списком товаров"""
-    model = Product  # какую модель берём
-    template_name = 'catalog/home.html'  # какой шаблон показываем
-    context_object_name = 'products'  # под каким именем передаём в шаблон
+    model = Product
+    template_name = 'catalog/home.html'
+    context_object_name = 'products'
 
 
 class ContactsView(View):
@@ -35,7 +37,41 @@ class ContactsView(View):
 
 class ProductDetailView(DetailView):
     """Контроллер для страницы с подробной информацией о товаре"""
-    model = Product  # какую модель берём
-    template_name = 'catalog/product_detail.html'  # какой шаблон
-    context_object_name = 'product'  # под каким именем передаём
-    pk_url_kwarg = 'product_id'  # какой параметр из URL использовать как ID
+    model = Product
+    template_name = 'catalog/product_detail.html'
+    context_object_name = 'product'
+    pk_url_kwarg = 'product_id'
+
+
+# ========== CRUD для продуктов (новое для домашки 26.1) ==========
+
+class ProductListView(ListView):
+    """Список всех продуктов (для CRUD)"""
+    model = Product
+    template_name = 'catalog/product_list.html'
+    context_object_name = 'products'
+
+
+class ProductCreateView(CreateView):
+    """Создание нового продукта"""
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/product_form.html'
+    success_url = reverse_lazy('catalog:product_list')
+
+
+class ProductUpdateView(UpdateView):
+    """Редактирование продукта"""
+    model = Product
+    form_class = ProductForm
+    template_name = 'catalog/product_form.html'
+
+    def get_success_url(self):
+        return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
+
+
+class ProductDeleteView(DeleteView):
+    """Удаление продукта"""
+    model = Product
+    template_name = 'catalog/product_confirm_delete.html'
+    success_url = reverse_lazy('catalog:product_list')
