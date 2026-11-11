@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import CustomUser  # импорт твоей кастомной модели
 
 
 class Category(models.Model):
@@ -33,10 +34,30 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата последнего изменения')
 
+    # ===== НОВОЕ: статус публикации =====
+    is_published = models.BooleanField(
+        default=False,
+        verbose_name='Опубликован'
+    )
+
+    # ===== НОВОЕ: владелец продукта =====
+    owner = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='products',
+        verbose_name='Владелец',
+        null=True,  # временно, пока не заполним старые продукты
+        blank=True
+    )
+
     class Meta:
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
         ordering = ['-created_at', 'name']
+        # ===== НОВОЕ: кастомное право =====
+        permissions = [
+            ('can_unpublish_product', 'Может отменять публикацию продукта'),
+        ]
 
     def __str__(self):
         return f'{self.name} ({self.category.name})'

@@ -1,39 +1,22 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, View, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from .models import Product
 from .forms import ProductForm
 
 
-# ========== Существующие контроллеры ==========
-
-class HomeView(ListView):
-    """Контроллер для домашней страницы со списком товаров"""
+class ProductListView(ListView):
+    """Список всех продуктов (ОТКРЫТ ДЛЯ ВСЕХ)"""
     model = Product
-    template_name = 'catalog/home.html'
+    template_name = 'catalog/product_list.html'
     context_object_name = 'products'
 
-
-class ContactsView(View):
-    """Контроллер для страницы контактов с обработкой формы"""
-
-    def get(self, request):
-        """GET-запрос — просто показываем страницу"""
-        return render(request, 'catalog/contacts.html', {'success': False})
-
-    def post(self, request):
-        """POST-запрос — обрабатываем форму"""
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        message = request.POST.get('message')
-
-        success = False
-        if name:
-            success = True
-            print(f"Получено сообщение от {name} ({email}): {message}")
-
-        return render(request, 'catalog/contacts.html', {'success': success})
+    # Показываем только опубликованные продукты
+    def get_queryset(self):
+        return Product.objects.filter(is_published=True)
 
 
 class ProductDetailView(DetailView):
@@ -41,16 +24,7 @@ class ProductDetailView(DetailView):
     model = Product
     template_name = 'catalog/product_detail.html'
     context_object_name = 'product'
-
-
-
-# ========== CRUD для продуктов ==========
-
-class ProductListView(ListView):
-    """Список всех продуктов (ОТКРЫТ ДЛЯ ВСЕХ)"""
-    model = Product
-    template_name = 'catalog/product_list.html'
-    context_object_name = 'products'
+    pk_url_kwarg = 'pk'
 
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
@@ -61,21 +35,54 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('catalog:product_list')
     login_url = 'users:login'
 
-
-class ProductUpdateView(LoginRequiredMixin, UpdateView):
-    """Редактирование продукта (ТОЛЬКО ДЛЯ АВТОРИЗОВАННЫХ)"""
-    model = Product
-    form_class = ProductForm
-    template_name = 'catalog/product_form.html'
-    login_url = 'users:login'
-
-    def get_success_url(self):
-        return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
+    # Автоматически устанавливаем владельца при создании
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        # По умолчанию продукт не опубликован (требует модерации)
+        form.instance.is_published = False
+        return super().form_valid(form)
 
 
-class ProductDeleteView(LoginRequiredMixin, DeleteView):
-    """Удаление продукта (ТОЛЬКО ДЛЯ АВТОРИЗОВАННЫХ)"""
-    model = Product
-    template_name = 'catalog/product_confirm_delete.html'
-    success_url = reverse_lazy('catalog:product_list')
-    login_url = 'users:login'
+class ProductUpdateView(LoginRequiredMixin, View):
+    """Редактирование продукта (ТОЛЬКО ВЛАДЕЛЕЦ или МОДЕРАТОР)"""
+
+    def get(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+
+        # Проверяем: владелец ИЛИ модератор с правом can_unpublish_product
+        if (product.owner == request.user or
+                request.user.has_perm('catalog.can_unpublish_product')):
+            form = ProductForm(instance=product)
+            return render(request, 'catalog/product_form.html', {'form': form})
+        else:
+            return redirect('catalog:product_detail', pk=pk)
+
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+
+        # Проверяем права
+        if (product.owner == request.user or
+                request.user.has_perm('catalog.can_unpublish_product')):
+            form = ProductForm(request.POST, request.FILES, instance=product)
+            if form.is_valid():
+                form.save()
+                return redirect('catalog:product_detail', pk=pk)
+        else:
+            return redirect('catalog:product_detail', pk=pk)
+
+        return render(request, 'catalog/product_form.html', {'form': form})
+
+
+class ProductDeleteView(LoginRequiredMixin, View):
+    """Удаление продукта (ТОЛЬКО ВЛАДЕЛЕЦ или МОДЕРАТОР)"""
+
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+
+        # Проверяем: владелец ИЛИ модератор с правом delete_product
+        if (product.owner == request.user or
+                request.user.has_perm('catalog.delete_product')):
+            product.delete()
+            return redirect('catalog:product_list')
+        else:
+            return redirect('catalog:product_detail', pk=pk)
