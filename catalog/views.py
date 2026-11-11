@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Product
 from .forms import ProductForm
 
@@ -36,42 +37,45 @@ class ContactsView(View):
 
 
 class ProductDetailView(DetailView):
-    """Контроллер для страницы с подробной информацией о товаре"""
+    """Детальная страница товара (ОТКРЫТ ДЛЯ ВСЕХ)"""
     model = Product
     template_name = 'catalog/product_detail.html'
     context_object_name = 'product'
-    pk_url_kwarg = 'product_id'
 
 
-# ========== CRUD для продуктов (новое для домашки 26.1) ==========
+
+# ========== CRUD для продуктов ==========
 
 class ProductListView(ListView):
-    """Список всех продуктов (для CRUD)"""
+    """Список всех продуктов (ОТКРЫТ ДЛЯ ВСЕХ)"""
     model = Product
     template_name = 'catalog/product_list.html'
     context_object_name = 'products'
 
 
-class ProductCreateView(CreateView):
-    """Создание нового продукта"""
+class ProductCreateView(LoginRequiredMixin, CreateView):
+    """Создание нового продукта (ТОЛЬКО ДЛЯ АВТОРИЗОВАННЫХ)"""
     model = Product
     form_class = ProductForm
     template_name = 'catalog/product_form.html'
     success_url = reverse_lazy('catalog:product_list')
+    login_url = 'users:login'
 
 
-class ProductUpdateView(UpdateView):
-    """Редактирование продукта"""
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
+    """Редактирование продукта (ТОЛЬКО ДЛЯ АВТОРИЗОВАННЫХ)"""
     model = Product
     form_class = ProductForm
     template_name = 'catalog/product_form.html'
+    login_url = 'users:login'
 
     def get_success_url(self):
         return reverse_lazy('catalog:product_detail', kwargs={'pk': self.object.pk})
 
 
-class ProductDeleteView(DeleteView):
-    """Удаление продукта"""
+class ProductDeleteView(LoginRequiredMixin, DeleteView):
+    """Удаление продукта (ТОЛЬКО ДЛЯ АВТОРИЗОВАННЫХ)"""
     model = Product
     template_name = 'catalog/product_confirm_delete.html'
     success_url = reverse_lazy('catalog:product_list')
+    login_url = 'users:login'

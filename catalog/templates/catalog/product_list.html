@@ -8,7 +8,19 @@
 <body>
 <div class="container mt-4">
     <h1>Каталог продуктов</h1>
-    <a href="{% url 'catalog:product_create' %}" class="btn btn-primary mb-3">Добавить продукт</a>
+
+    <!-- Показываем кнопку "Добавить" только авторизованным -->
+    {% if user.is_authenticated %}
+        <a href="{% url 'catalog:product_create' %}" class="btn btn-primary mb-3">Добавить продукт</a>
+        <span class="ms-3">
+            Привет, {{ user.email }}!
+            <a href="{% url 'users:profile' %}" class="btn btn-sm btn-outline-primary">Профиль</a>
+            <a href="{% url 'users:logout' %}" class="btn btn-sm btn-outline-danger">Выйти</a>
+        </span>
+    {% else %}
+        <a href="{% url 'users:login' %}" class="btn btn-success mb-3">Войти</a>
+        <a href="{% url 'users:register' %}" class="btn btn-info mb-3">Регистрация</a>
+    {% endif %}
 
     <div class="row">
         {% for product in products %}
@@ -18,9 +30,13 @@
                     <h5 class="card-title">{{ product.name }}</h5>
                     <p class="card-text">{{ product.description|truncatewords:20 }}</p>
                     <p class="card-text"><strong>Цена: {{ product.price }} руб.</strong></p>
-                    <a href="{% url 'catalog:product_detail' product.pk %}" class="btn btn-info">Подробнее</a>
-                    <a href="{% url 'catalog:product_update' product.pk %}" class="btn btn-warning">Редактировать</a>
-                    <a href="{% url 'catalog:product_delete' product.pk %}" class="btn btn-danger">Удалить</a>
+                    <a href="{% url 'catalog:product_detail' pk=product.pk %}" class="btn btn-info">Подробнее</a>
+
+                    <!-- Кнопки редактирования и удаления только для авторизованных -->
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'catalog:product_update' pk=product.pk %}" class="btn btn-warning">Редактировать</a>
+<a href="{% url 'catalog:product_delete' pk=product.pk %}" class="btn btn-danger">Удалить</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
