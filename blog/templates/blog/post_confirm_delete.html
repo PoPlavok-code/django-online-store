@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Удаление статьи</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; margin: 10px; text-decoration: none; border-radius: 4px; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Удалить статью?</h1>
+    <p>Вы уверены, что хотите удалить статью "<strong>{{ post.title }}</strong>"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Да, удалить</button>
+        <a href="{% url 'blog:post_detail' post.pk %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</body>
+</html>

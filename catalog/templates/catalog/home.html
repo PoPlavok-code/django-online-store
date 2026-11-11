@@ -1,0 +1,35 @@
+{% extends "catalog/base.html" %}
+
+{% block title %}Главная - Online Store{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Добро пожаловать в наш магазин!</h1>
+            <p class="col-md-8 fs-4">Здесь вы найдете лучшие товары по отличным ценам.</p>
+            <a href="{% url 'contacts' %}" class="btn btn-primary btn-lg">Связаться с нами</a>
+        </div>
+    </div>
+
+    <h2 class="mb-4">Каталог товаров</h2>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">{{ product.description|truncatechars:100 }}</p>
+                    <p class="card-text"><strong>Цена: {{ product.price }} руб.</strong></p>
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="alert alert-info">Товары пока не добавлены.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
